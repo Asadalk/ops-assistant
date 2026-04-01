@@ -45,6 +45,10 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def read_root():
+    return {"message": "Hello, your API is working 🚀"}
+
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()

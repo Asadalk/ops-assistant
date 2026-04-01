@@ -15,7 +15,7 @@ This project is fully local-first for development:
 - Backend: FastAPI + SQLite
 - AI: Gemini API via `google-generativeai`
 - Frontend: Next.js 14 (App Router) + TypeScript + Tailwind CSS
-- No Docker required
+- Docker support included (optional)
 
 ## Features
 
@@ -114,6 +114,40 @@ npm run dev
 ```
 
 Frontend URL: `http://127.0.0.1:3000`
+
+### 3. Run with Docker Compose (Backend + Frontend together)
+
+If you prefer containers, this project includes:
+
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
+- `docker-compose.yml`
+
+Steps:
+
+```bash
+cp backend/.env.example backend/.env
+# add your GEMINI_API_KEY in backend/.env
+
+docker compose up --build
+```
+
+Access URLs:
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:8000`
+
+Stop containers:
+
+```bash
+docker compose down
+```
+
+Rebuild after dependency changes:
+
+```bash
+docker compose up --build
+```
 
 ## End-to-End Test
 
@@ -240,6 +274,8 @@ Or absolute path:
 ### Frontend does not start
 
 - Ensure Node 20+ is active
+- Ensure frontend env file exists (`frontend/.env.local`). If missing, create it from `frontend/.env.local.example`.
+- In `frontend`, use `cp .env.local.example .env.local` (not `cp .env.example .env`).
 - Reinstall deps and rebuild:
 
 ```bash
@@ -248,6 +284,17 @@ rm -rf node_modules .next
 npm install
 npm run build
 npm run dev
+```
+
+### Docker build fails at backend pip install
+
+If you see `ReadTimeoutError` while building backend image, it is a network timeout during Python package download.
+
+Retry with a fresh build:
+
+```bash
+docker compose build --no-cache backend
+docker compose up --build
 ```
 
 ## Security and GitHub Push Checklist
