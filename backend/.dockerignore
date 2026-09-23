@@ -1,8 +1,6 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.venv/
-.venv311/
 .env
+.venv*
+__pycache__/
+.pytest_cache/
+*.py[cod]
 tasks.db

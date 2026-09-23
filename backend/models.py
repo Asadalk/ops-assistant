@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Priority = Literal["high", "medium", "low"]
 TaskStatus = Literal["todo", "in_progress", "done"]
@@ -10,12 +10,39 @@ TaskStatus = Literal["todo", "in_progress", "done"]
 class ExtractRequest(BaseModel):
     text: str = Field(..., min_length=1)
 
+    @field_validator("text")
+    @classmethod
+    def reject_whitespace(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Input text must not be empty")
+        return value
+
 
 class ExtractedTask(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     task: str = Field(..., min_length=1)
     owner: str = Field(default="Unknown")
     deadline: str = Field(default="Not specified")
     priority: Priority = "medium"
+
+    @field_validator("task")
+    @classmethod
+    def reject_blank_task(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Task text must not be empty")
+        return value
+
+    @field_validator("owner")
+    @classmethod
+    def normalize_owner(cls, value: str) -> str:
+        return value.strip() or "Unknown"
+
+    @field_validator("deadline")
+    @classmethod
+    def normalize_deadline(cls, value: str) -> str:
+        return value.strip() or "Not specified"
 
 
 class TaskUpdateRequest(BaseModel):
@@ -35,25 +62,15 @@ class Task(BaseModel):
 
 
 class TaskCreate(BaseModel):
-    task: str
+    task: str = Field(..., min_length=1)
     owner: str = "Unknown"
     deadline: str = "Not specified"
     priority: Priority = "medium"
 
 
 def normalize_task(item: dict[str, object]) -> TaskCreate:
-    raw_task = str(item.get("task", "")).strip()
-    if not raw_task:
-        raise ValueError("Task text is required")
-
-    owner = str(item.get("owner", "Unknown")).strip() or "Unknown"
-    deadline = str(item.get("deadline", "Not specified")).strip() or "Not specified"
-
-    raw_priority = str(item.get("priority", "medium")).strip().lower()
-    if raw_priority not in {"high", "medium", "low"}:
-        raw_priority = "medium"
-
-    return TaskCreate(task=raw_task, owner=owner, deadline=deadline, priority=raw_priority)
+    # Validate model output strictly; never silently turn invalid priorities into medium.
+    return TaskCreate.model_validate(ExtractedTask.model_validate(item).model_dump())
 
 
 def now_iso() -> str:

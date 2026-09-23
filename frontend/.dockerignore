@@ -2,3 +2,8 @@ node_modules/
 .next/
 .env.local
 npm-debug.log*
+.venv*/
+out/
+*.tsbuildinfo
+.git/
+coverage/

@@ -1,10 +1,12 @@
 import sqlite3
+import os
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent / "tasks.db"
+DB_PATH = Path(os.getenv("TASKS_DB_PATH", Path(__file__).resolve().parent / "tasks.db"))
 
 
 def get_connection() -> sqlite3.Connection:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn

@@ -43,6 +43,7 @@ export default function BoardPage() {
   }, [tasks]);
 
   async function handleStatusChange(taskId: number, status: TaskStatus) {
+    setError(null);
     try {
       const updated = await patchTask(taskId, { status });
       setTasks((current) => current.map((task) => (task.id === taskId ? updated : task)));
@@ -53,6 +54,7 @@ export default function BoardPage() {
   }
 
   async function handleDelete(taskId: number) {
+    setError(null);
     try {
       await deleteTask(taskId);
       setTasks((current) => current.filter((task) => task.id !== taskId));
